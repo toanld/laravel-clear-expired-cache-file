@@ -1,5 +1,5 @@
 {
-  "name": "arifhp86/laravel-clear-expired-cache-file",
+  "name": "toanld/laravel-clear-expired-cache-file",
   "description": "Remove laravel expired cache file/folder",
   "keywords": ["laravel", "cache", "expired", "clear"],
   "license": "MIT",

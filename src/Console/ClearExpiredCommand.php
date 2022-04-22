@@ -46,51 +46,38 @@ class ClearExpiredCommand extends Command
      */
     public function handle()
     {
-        $this->deleteExpiredFiles();
-        $this->deleteEmptyFolders();
+        $this->deleteFoldersAndFiles();
         $this->showResults();
     }
 
-    private function deleteExpiredFiles()
-    {
-        $files = Storage::disk('fcache')->allFiles();
-        $this->output->progressStart(count($files));
-
-        // Loop the files and get rid of any that have expired
-        foreach($files as $key => $cachefile) {
-            // Ignore files that named with dot(.) at the begining e.g. .gitignore
-            if(substr($cachefile, 0, 1) == '.') {
-                continue;
-            }
-
-            // Grab the contents of the file
-            $contents = Storage::disk('fcache')->get($cachefile);
-
-            // Get the expiration time
-            $expire = substr($contents, 0, 10);
-
-            // See if we have expired
-            if(time() >= $expire) {
-                // Delete the file
-                $this->expiredFileSize += Storage::disk('fcache')->size($cachefile);
-                Storage::disk('fcache')->delete($cachefile);
-                $this->expiredFileCount++;
-            } else {
-                $this->activeFileCount++;
-                $this->activeFileSize += Storage::disk('fcache')->size($cachefile);
-            }
-            $this->output->progressAdvance();
-        }
-        $this->output->progressFinish();
-    }
-
-    private function deleteEmptyFolders()
-    {
+    public function deleteFoldersAndFiles(){
         $directories = Storage::disk('fcache')->allDirectories();
         $dirCount = count($directories);
         // looping backward to make sure subdirectories are deleted first
         while(--$dirCount >= 0) {
-            if(!Storage::disk('fcache')->allFiles($directories[$dirCount])) {
+            $this->info("Deleting " . $directories[$dirCount]);
+            if($files = Storage::disk('fcache')->allFiles($directories[$dirCount])) {
+                foreach($files as $key => $cachefile) {
+                    // Ignore files that named with dot(.) at the begining e.g. .gitignore
+                    if (substr($cachefile, 0, 1) == '.') {
+                        continue;
+                    }
+
+                    // Grab the contents of the file
+                    $contents = Storage::disk('fcache')->get($cachefile);
+                    $this->expiredFileSize += strlen($contents);
+
+                    // Get the expiration time
+                    $expire = substr($contents, 0, 10);
+                    //$this->info(date("d/m/Y H:i:s", $expire));
+                    // See if we have expired
+                    if (time() >= $expire) {
+                        // Delete the file
+                        Storage::disk('fcache')->delete($cachefile);
+                        $this->expiredFileCount++;
+                    }
+                }
+            }else{
                 Storage::disk('fcache')->deleteDirectory($directories[$dirCount]);
             }
         }
@@ -100,7 +87,7 @@ class ClearExpiredCommand extends Command
     {
         $expiredFileSize = $this->formatBytes($this->expiredFileSize);
         $activeFileSize = $this->formatBytes($this->activeFileSize);
-        
+
         if($this->expiredFileCount) {
             $this->info("✔ {$this->expiredFileCount} expired cache files removed");
             $this->info("✔ {$expiredFileSize} disk cleared");

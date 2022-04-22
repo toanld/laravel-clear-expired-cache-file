@@ -4,10 +4,10 @@ This package will remove any expired cache file, this only works with `file` cac
 
 ## Installation
 
-1. Add arifhp86/laravel-clear-expired-cache-file to your project:
+1. Add toanld/laravel-clear-expired-cache-file to your project:
 
 ```bash
-composer require arifhp86/laravel-clear-expired-cache-file
+composer require toanld/laravel-clear-expired-cache-file
 ```
 
 2. For **Laravel >= 5.5** we use Package Auto-Discovery, so you may skip this step.
